@@ -71,7 +71,7 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - these sequences are derived from HYBISS paper and you do not need to modify this file unless you want to use or add other dyes and sequences.
 
 ## details
-### probe design principal
+### probe design principle
 
 - PLP:
 /5Phos/ACATTA + rev_compl{target_sequence1} + {unique_bridge_seq_from_HybISS} + {anchor} + AAGATA
