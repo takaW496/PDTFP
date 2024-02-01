@@ -21,6 +21,8 @@ def load_fastadb(target_genome):
 
     with open(target_genome, 'r') as f:
         for line in f:
+            if not line.strip():# empty rows between entries
+                continue
             line = line.rstrip('\n')
             if line[0] == '>':      # a new sequence
                 d[header] = seq 
