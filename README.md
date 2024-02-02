@@ -70,6 +70,36 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - dye name in the first column, detection nucleotide sequences in the second column
 - these sequences are derived from HYBISS paper and you do not need to modify this file unless you want to use or add other dyes and sequences.
 
+## Input file format
+
+- sequence_id: unique identifiers of seed sequences for each gene.
+- target_gene_ID: target gene ID provided by round_table.txt
+- seed_sequence: seed sequences for PLP and primers
+- start_pos: start position of seed sequences within gene sequences
+- end_pos: end position of seed sequences in gene sequences
+- GC (%): GC content of seed sequences in percent
+- 1st_sequence: the first half of the seed sequence utilized for PLP sequences
+- 2nd_sequence: the second half of the seed sequence utilized for primer sequences
+- 1st_Tm: melting temperature of the first half of the sequences (please see details section)
+- 2nd_Tm: melting temperature of the second half of the sequences (please see details section)
+- is_specific: whether seed sequences are specific enough or not.
+- id_clust: id_clust indicates the group to which the seed sequences belong. seed sequences from similar positions (often overlapped) are grouped. please see the details section.
+- BridgeProbe_ID: unique bridge probe id used to detect a gene and derived from the HybISS paper
+- Seq_Barcode: barcode sequences in bridge probe
+- Seq_Anchor: anchor sequences in bridge probe
+- highest_bit_score: derived from the blast results against the target genome using bridge probes as queries to evaluate bridge probes
+- Rank: bridge probes are ranked depending on the highest bit score.
+- PLP_seq: PLP sequences. phosphorylation modifications are added at the 5' end
+- primer_seq: primer sequences
+- dye_seq: bridge sequences that hybridize the unique barcode sequences in PLP and detection oligos
+- round: detection round specified in round_table.txt
+- dye: fluorescent dyes for gene detection
+- gene_name: common gene name if provided by the round_table.txt
+- detection_oligo: oligonucleotides for detection provided by dye_seq.txt
+- excitation: excitation wavelength for fluorescent dye
+- emission: emission wavelength for fluorescent dye
+
+
 ## details
 ### probe design principle
 
