@@ -70,7 +70,7 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - dye name in the first column, detection nucleotide sequences in the second column
 - these sequences are derived from HYBISS paper and you do not need to modify this file unless you want to use or add other dyes and sequences.
 
-## Input file format
+## output file format
 
 - sequence_id: unique identifiers of seed sequences for each gene.
 - target_gene_ID: target gene ID provided by round_table.txt
