@@ -45,7 +45,7 @@ def get_dye_seq(Seq_Barcode):
 
 def add_PLP_column(df, target_gene_IDs, df_bridge):
 	PLP_seq = [str(Seq(seq).reverse_complement()) for seq in df['1st_sequence']]
-	PLP_seq = ['ACATTA' + seq for seq in PLP_seq]
+	PLP_seq = ['/5Phos/ACATTA' + seq for seq in PLP_seq]
 	df_bridge.loc[:,'concat_seq'] = df_bridge.loc[:,'Seq_Barcode'] + df_bridge.loc[:,'Seq_Anchor'] + 'AAGATA'
 	df_Bp_ID = df_bridge.iloc[0:len(target_gene_IDs)]
 	df_Bp_ID = df_Bp_ID.assign(target_gene_ID = target_gene_IDs)
@@ -77,10 +77,15 @@ def rank_bridge_seq(df_bridge, target_genome, dir_blast_out):
 	for f in blast_files:
 		Bp_ID = f.replace('_blast.txt', '')
 		bit_score = [x.split(',')[11] for x in open(os.path.join(blast_dir, f)).readlines()]
-		bit_score = [s.strip() for s in bit_score]
+		if not bit_score:
+			print('blast_result is empty for this sequences: ', Bp_ID)
+			print('assign 0 to bit_score.')
+			bit_score = [0]
+		else:
+			bit_score = [s.strip() for s in bit_score]
 		Bp_ID_list.append(Bp_ID)
 		bit_score_list.append(max(bit_score))
-	df_score = pd.DataFrame(data = {'BridgeProbe_ID':Bp_ID_list,'highest_bit_score':bit_score_list}, columns = ['BridgeProbe_ID', 'highest_bit_score'])
+	df_score = pd.DataFrame(data = {'BridgeProbe_ID':Bp_ID_list,'highest_bit_score':list(map(float, bit_score_list))}, columns = ['BridgeProbe_ID', 'highest_bit_score'])
 	df_bridge = pd.merge(df_bridge, df_score, on = 'BridgeProbe_ID')
 	df_bridge.loc[:,'Rank'] = df_bridge['highest_bit_score'].rank()
 	df_bridge = df_bridge.sort_values(by = 'BridgeProbe_ID')
