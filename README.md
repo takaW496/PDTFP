@@ -45,6 +45,7 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - tmmax: integer, maximum melting temperature (C) used in `screenseq.search_seed_seq`. the default value is 52.
 - outfile: path and name of the output txt file.
 - threads: the number of threads you will use. this parameter is currently not used.
+- high_throughput: integer, specify the number of bridge sequences used in high throughput mode. set 0 if you do not use high throughput mode. the default value is 0.
 
 ## Input file format
 ### round_table.txt
@@ -99,6 +100,15 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - excitation: excitation wavelength for fluorescent dye
 - emission: emission wavelength for fluorescent dye
 
+
+## high throughput mode
+
+When you apply PHYTOMap to check expression patterns of numerous genes using multiple samples in a high throughput manner, you may not need to repeat the probe hybridization/stripping process. In such cases, the same bridge probe set can be used for different samples (rounds). By activating the high throughput mode, the same bridge probe sequence set is repeatedly used.
+
+- specify the number of bridge sequences to be used for one sample (round) in the 'high_throughput' parameter.
+- The script selects top-ranked bridge sequences evaluated during 'check_bridge_seq' and repeatedly used to make PLP probes.
+- The default number 'high_throughput' is 0 which turns off high throughput mode.
+- Bp_ID and fluorescent dye combination should be always the same.
 
 ## details
 ### probe design principle
