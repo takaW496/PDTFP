@@ -27,8 +27,8 @@ from my_module import load_db
 #parameter settings
 dir_blast_in = 'blast_in'
 dir_blast_out = 'blast_out'
-target_genome = 'blastDB/test.fasta'
-round_table = 'round_table_test.txt'
+target_genome = 'blastDB/Lotusjaponicus_test.fa' # modified
+round_table = 'round_table_Lj_MO.txt' # modified
 BridgeProbes = 'BridgeProbes.txt'
 dye_seq_file = 'dye_seq.txt'
 seed_seq_len = 50
@@ -36,7 +36,7 @@ gcmin = 40
 gcmax = 60
 tmmin = 48
 tmmax = 52
-outfile = 'candidates_test.txt'
+outfile = 'Lj_candidates_test2.txt'
 threads = 1
 args = dict()
 args['target_genome'] = target_genome
