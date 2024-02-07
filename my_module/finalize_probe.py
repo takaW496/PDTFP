@@ -11,10 +11,10 @@ Processes = []
 NextProcess = 0
 input_files = 0
 
-def add_probe_seq(df, target_gene_IDs, target_genome, round_table, BridgeProbes, dye_seq, dir_blast_in, dir_blast_out):
+def add_probe_seq(df, target_gene_IDs, target_genome, round_table, BridgeProbes, dye_seq, dir_blast_in, dir_blast_out, high_throughput):
 	"""  finalize probe sequence for each candidate seed sequences """
 	df_bridge = check_bridge_seq(BridgeProbes, target_genome, dir_blast_in, dir_blast_out)
-	df = add_PLP_column(df, target_gene_IDs, df_bridge)
+	df = add_PLP_column(df, target_gene_IDs, df_bridge, round_table, high_throughput)
 	df = add_primer_column(df)
 	df = add_bridge_probe_column(df, target_gene_IDs, round_table, dye_seq)
 
@@ -31,6 +31,7 @@ def add_bridge_probe_column(df, target_gene_IDs, round_table, dye_seq):
 	df = pd.merge(df,df_round, left_on = 'target_gene_ID', right_on = 'gene_ID')
 	df.loc[:,'dye_seq'] = df.loc[:,'dye_seq'] + df.loc[:,'Seq_rev_comp']
 	df = df.drop(['gene_ID', 'Seq_rev_comp'], axis = 1)
+	df = df.sort_values(by=['round', 'dye'])
 
 	return df
 
@@ -43,15 +44,32 @@ def get_dye_seq(Seq_Barcode):
 
 	return dye_seq
 
-def add_PLP_column(df, target_gene_IDs, df_bridge):
+def add_PLP_column(df, target_gene_IDs, df_bridge, round_table, high_throughput):
 	PLP_seq = [str(Seq(seq).reverse_complement()) for seq in df['1st_sequence']]
 	PLP_seq = ['/5Phos/ACATTA' + seq for seq in PLP_seq]
 	df_bridge.loc[:,'concat_seq'] = df_bridge.loc[:,'Seq_Barcode'] + df_bridge.loc[:,'Seq_Anchor'] + 'AAGATA'
-	df_Bp_ID = df_bridge.iloc[0:len(target_gene_IDs)]
-	df_Bp_ID = df_Bp_ID.assign(target_gene_ID = target_gene_IDs)
-	df = pd.merge(df, df_Bp_ID, on = 'target_gene_ID', )
-	df.loc[:,'PLP_seq'] = [x + y for (x, y) in zip(PLP_seq, df['concat_seq'])]
-	df = df.drop('concat_seq', axis = 1)
+	# high throughput mode
+	if high_throughput:
+		print ('high_throughput mode is on. use only the same set of bridge sequences for different rounds.')
+		df_Bp_ID = df_bridge.iloc[0:high_throughput]
+		df_round = pd.read_table(round_table, sep = '\t')
+		df_Bp_ID.loc[:, 'dye'] = df_round.loc[df_round['round'] == 1, 'dye'].tolist()
+		num_repeat = int(len(target_gene_IDs)/high_throughput)
+		repeated_dfs = [df_Bp_ID.assign(round=i+1) for i in range(num_repeat)]
+		df_Bp_ID = pd.concat(repeated_dfs)
+		df_Bp_ID.reset_index(drop=True, inplace=True)
+		df_Bp_ID = pd.merge(df_Bp_ID, df_round, on = ['round', 'dye'] )
+		df = pd.merge(df, df_Bp_ID, left_on = 'target_gene_ID', right_on = 'gene_ID')
+		df.loc[:,'PLP_seq'] = [x + y for (x, y) in zip(PLP_seq, df['concat_seq'])]
+		df = df.drop(['concat_seq','gene_ID', 'dye', 'round'], axis = 1)
+        
+	elif not high_throughput:
+		print ('high_throughput mode is off. use different bridge sequences set for different rounds.')
+		df_Bp_ID = df_bridge.iloc[0:len(target_gene_IDs)]
+		df_Bp_ID = df_Bp_ID.assign(target_gene_ID = target_gene_IDs)
+		df = pd.merge(df, df_Bp_ID, on = 'target_gene_ID', )
+		df.loc[:,'PLP_seq'] = [x + y for (x, y) in zip(PLP_seq, df['concat_seq'])]
+		df = df.drop('concat_seq', axis = 1)
 
 	return df
 
