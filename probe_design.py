@@ -27,8 +27,8 @@ from my_module import load_db
 #parameter settings
 dir_blast_in = 'blast_in'
 dir_blast_out = 'blast_out'
-target_genome = 'blastDB/Lotusjaponicus_test.fa' # modified
-round_table = 'round_table_Lj_MO.txt' # modified
+target_genome = 'blastDB/test.fasta'
+round_table = 'round_table_test.txt'
 BridgeProbes = 'BridgeProbes.txt'
 dye_seq_file = 'dye_seq.txt'
 seed_seq_len = 50
@@ -36,8 +36,9 @@ gcmin = 40
 gcmax = 60
 tmmin = 48
 tmmax = 52
-outfile = 'Lj_candidates_test2.txt'
+outfile = 'candidates_test_high.txt'
 threads = 1
+high_throughput = 0 # the number of bridge sequences for the same sample, put 0 if you will not use high throuput mode
 args = dict()
 args['target_genome'] = target_genome
 args['round_table'] = round_table
@@ -50,6 +51,7 @@ args['tmmin'] = tmmin
 args['tmmax'] = tmmax
 args['outfile'] = outfile
 args['threads'] = threads
+args['high_throughput'] = high_throughput
 
 
 # In[4]:
@@ -66,7 +68,7 @@ parblast.blastdb(target_genome) #prepare blast db
 parblast.continueblast(target_gene_IDs, target_genome, dir_blast_in, dir_blast_out)
 df = checkblast.getcandidates(df, target_gene_IDs, dir_blast_out, args['seed_seq_len'])
 df = checkblast.add_id_clust(df, target_gene_IDs, args['seed_seq_len'], 5)
-df = finalize_probe.add_probe_seq(df, target_gene_IDs, args['target_genome'], args['round_table'], args['BridgeProbes'], args['dye_seq'], dir_blast_in, dir_blast_out)
+df = finalize_probe.add_probe_seq(df, target_gene_IDs, args['target_genome'], args['round_table'], args['BridgeProbes'], args['dye_seq'], dir_blast_in, dir_blast_out, args['high_throughput'])
 df.to_csv(args['outfile'], sep = '\t', index = False)
 print(f"Finished all processes. please check {args['outfile']}")
 
