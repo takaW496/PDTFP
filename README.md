@@ -74,7 +74,7 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 ## output file format
 
 - sequence_id: unique identifiers of seed sequences for each gene.
-- target_gene_ID: target gene ID provided by round_table.txt
+- target_gene_ID: target gene ID provided by `round_table.txt`
 - seed_sequence: seed sequences for PLP and primers
 - start_pos: start position of seed sequences within gene sequences
 - end_pos: end position of seed sequences in gene sequences
@@ -93,10 +93,10 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - PLP_seq: PLP sequences. phosphorylation modifications are added at the 5' end
 - primer_seq: primer sequences
 - dye_seq: bridge sequences that hybridize the unique barcode sequences in PLP and detection oligos
-- round: detection round specified in round_table.txt
+- round: detection round specified in `round_table.txt`
 - dye: fluorescent dyes for gene detection
-- gene_name: common gene name if provided by the round_table.txt
-- detection_oligo: oligonucleotides for detection provided by dye_seq.txt
+- gene_name: common gene name if provided by the `round_table.txt`
+- detection_oligo: oligonucleotides for detection provided by `dye_seq.txt`
 - excitation: excitation wavelength for fluorescent dye
 - emission: emission wavelength for fluorescent dye
 
@@ -105,9 +105,9 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 
 When you apply PHYTOMap to check expression patterns of numerous genes using multiple samples in a high throughput manner, you may not need to repeat the probe hybridization/stripping process. In such cases, the same bridge probe set can be used to detect different gene sets in different samples. By activating the high throughput mode, the same bridge probe sequence set is repeatedly used.
 
-- specify the number of bridge sequences to be used for one sample (round) in the 'high_throughput' parameter.
-- The script selects top-ranked bridge sequences evaluated during 'check_bridge_seq' and repeatedly used to make PLP probes.
-- The default number 'high_throughput' is 0 which turns off high throughput mode.
+- specify the number of bridge sequences to be used for one sample (round) in the `high_throughput` parameter.
+- The script selects top-ranked bridge sequences evaluated during `check_bridge_seq` and repeatedly used to make PLP probes.
+- The default number `high_throughput` is 0 which turns off high throughput mode.
 - Bp_ID and fluorescent dye combination should be always the same in different rounds.
 
 ## details
