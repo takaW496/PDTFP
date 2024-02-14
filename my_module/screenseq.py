@@ -87,14 +87,15 @@ def runscreen(argin):
     target_gene_ID, target_seq, seed_seq_len, gcmin, gcmax, tmmin, tmmax, out_dir = argin
     print('target_gene_ID:', target_gene_ID)
 
-    dname = os.path.join(out_dir, target_gene_ID)
+    dname = target_gene_ID + "_" + str(seed_seq_len)
+    dname = os.path.join(out_dir, dname)
     if os.path.exists(dname):
         shutil.rmtree(dname)
     os.makedirs(dname, exist_ok=True)
 
     siteChopped= {}
-    id_list, seq_list, seq_start_list, seq_end_list, GC_list, seq_1_list, seq_2_list, tm_1_list, tm_2_list = \
-    [], [], [], [], [], [], [], [], []
+    id_list, seq_list, seq_len_list, seq_start_list, seq_end_list, GC_list, seq_1_list, seq_2_list, tm_1_list, tm_2_list = \
+    [], [], [], [], [], [], [], [], [], []
 
     listSeqChopped = chopseq(target_seq, seed_seq_len, 5)
     #evaluate seed seqs based on GC content
@@ -114,6 +115,7 @@ def runscreen(argin):
         if tmmin < tm_1 < tmmax and tmmin < tm_2 < tmmax:
             id_list += [key]
             seq_list += [value[0]]
+            seq_len_list.append(seed_seq_len)
             seq_start_list += [value[1]]
             seq_end_list += [value[2]]
             GC_list += [value[3]]
@@ -136,29 +138,32 @@ def runscreen(argin):
         print('The minimum Tm found in all balanced sequence pairs:', lowest_tm)
         print('There is no balanced pairs with Tm below tmmax. Try to decrease the seed_seq_len parameter.')
 
-    df = pd.DataFrame(data = {'sequence_id':id_list,'target_gene_ID':target_gene_ID,'seed_sequence':seq_list,'start_pos':seq_start_list,'end_pos':seq_end_list,
+    df = pd.DataFrame(data = {'sequence_id':id_list,'target_gene_ID':target_gene_ID,'seed_sequence':seq_list,'seed_seq_len':seq_len_list, 'start_pos':seq_start_list,'end_pos':seq_end_list,
         'GC (%)':GC_list,'1st_sequence': seq_1_list, '2nd_sequence': seq_2_list, '1st_Tm': tm_1_list, '2nd_Tm': tm_2_list}, 
-    columns = [ 'sequence_id', 'target_gene_ID', 'seed_sequence', 'start_pos', 'end_pos', 'GC (%)', '1st_sequence', '2nd_sequence', '1st_Tm', '2nd_Tm'])
-    print(f'number of candidate sequence for {target_gene_ID} is', (df['target_gene_ID'] == target_gene_ID).sum())
+    columns = [ 'sequence_id', 'target_gene_ID', 'seed_sequence', 'seed_seq_len', 'start_pos', 'end_pos', 'GC (%)', '1st_sequence', '2nd_sequence', '1st_Tm', '2nd_Tm'])
+    print(f'number of candidate sequence for {target_gene_ID}, {seed_seq_len} bp is', (df['target_gene_ID'] == target_gene_ID).sum())
     return df
 
 def search_seed_seq (target_seqs, target_gene_IDs, seed_seq_len, gcmin, gcmax, tmmin, tmmax, out_dir):
     """ Parallel process of GC thresholding and subsequent Tm thresholding for input sequences """
-    # pack up inputs for multiprocessing
-    inputs = []
-    for c, i in enumerate(target_gene_IDs):
-        inputs.append((i, target_seqs[c], seed_seq_len, gcmin, gcmax, tmmin, tmmax, out_dir))
+    if not isinstance(seed_seq_len, list): #convert seed_seq_len to list for loop if it is a integer.
+        seed_seq_len = [seed_seq_len]
 
     siteCandidates = pd.DataFrame()
+    for l in seed_seq_len:
+        # pack up inputs for multiprocessing
+        inputs = []
+        for c, i in enumerate(target_gene_IDs):
+            inputs.append((i, target_seqs[c], l, gcmin, gcmax, tmmin, tmmax, out_dir))
 
-    for i in inputs:
-        argout = runscreen(i)
-        if len(argout) < 1:
-            print(f'No sequences satisfied criteria for this gene {i[0]}. Please adjust parameters to find seed sequences.')
-            continue
-        if len(siteCandidates) < 0: 
-            siteCandidates = argout
-        else:
-            siteCandidates = pd.concat([siteCandidates, argout])
+        for i in inputs:
+            argout = runscreen(i)
+            if len(argout) < 1:
+                print(f'No sequences satisfied criteria for this gene {i[0]}. Please adjust parameters to find seed sequences.')
+                continue
+            if len(siteCandidates) < 1: 
+                siteCandidates = argout
+            else:
+                siteCandidates = pd.concat([siteCandidates, argout])
 
     return siteCandidates

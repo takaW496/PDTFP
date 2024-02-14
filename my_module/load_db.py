@@ -5,7 +5,7 @@ def readgenefile(round_table):
     try:
         with open(round_table, 'r') as f:
             genes = [line.split('\t')[0] for line in f]
-            genes = [s for s in genes if not s.startswith('gene_ID')]
+            genes = [s for s in genes if not s.startswith('target_gene_ID')]
             genes.sort()
     except IOError:
         print("Gene list file not found. Try again.")

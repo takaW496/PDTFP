@@ -98,26 +98,31 @@ def blastdb(target_genome):
         except:
             print(" Could not format BLAST database")
 
-def continueblast(target_gene_IDs, target_genome, dir_blast_in, dir_blast_out):
+def continueblast(target_gene_IDs, seed_seq_len, target_genome, dir_blast_in, dir_blast_out):
     global Processes
     global NextProcess
     global input_files
 
+    if not isinstance(seed_seq_len, list): #convert seed_seq_len to list for loop if it is a integer.
+        seed_seq_len = [seed_seq_len]
+
     print ("Starting blast using candidate sequences as queries...")
 
     for gene in target_gene_IDs:
-        print(f'start blast for {gene}')
-        input_files = os.listdir(os.path.join(dir_blast_in, gene))
-        if os.path.exists(os.path.join(dir_blast_out, gene)):
-            shutil.rmtree(os.path.join(dir_blast_out, gene))
-        os.makedirs(os.path.join(dir_blast_out, gene), exist_ok=True)
-        for f in input_files:
-            NextProcess = 0
-            file_input = os.path.join(dir_blast_in, gene, f)
-            out_file_name = re.sub('.fasta', '_blast.txt', f)
-            file_output = os.path.join(dir_blast_out, gene, out_file_name)
+        for l in seed_seq_len:
+            print(f'start blast for {gene}, {l} bp')
+            dname = gene + "_" + str(l)
+            input_files = os.listdir(os.path.join(dir_blast_in, dname))
+            if os.path.exists(os.path.join(dir_blast_out, dname)):
+                shutil.rmtree(os.path.join(dir_blast_out, dname))
+            os.makedirs(os.path.join(dir_blast_out, dname), exist_ok=True)
+            for f in input_files:
+                NextProcess = 0
+                file_input = os.path.join(dir_blast_in, dname, f)
+                out_file_name = re.sub('.fasta', '_blast.txt', f)
+                file_output = os.path.join(dir_blast_out, dname, out_file_name)
 
-            runningblast(file_input, target_genome, file_output)  # start the max processes running
-            while len(Processes) > 0:   # still going on
-                runningblast(file_input, target_genome, file_output)
+                runningblast(file_input, target_genome, file_output)  # start the max processes running
+                while len(Processes) > 0:   # still going on
+                    runningblast(file_input, target_genome, file_output)
     print ("Blast finished!")
