@@ -29,8 +29,10 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - run blast search against the target genome using seed sequences in `blast_in` as queries (`parblast.continueblast`).  blast results will be stored in `blast_out`.
 - assess blast results in `blast_out` and judge whether seed sequences are specific enough (`checkblast.getcandidates`). add `is_specific` column to the dataframe
 - group seed sequences located closely (`checkblast.add_id_clust`). add `id_clust` column to the dataframe.
-- generate padlock probes and primers based on seed sequences, then corresponding bridge probes will be assigned to each gene based on the detection dye specified in the round table (`finalize_probe.add_probe_seq`).
-- manually check suggested probe sequences and determine which sequences you will use for the experiment. choose one seed sequence from one cluster to avoid large overlaps between probes. If there are not enough sequences for certain genes, change round tables and parameters, and run the program again.
+- bridge probes will be assigned to each gene after sequence evaluation (`get_exp_design`).
+- probe sequences will be generated based on bridge probe and fluorescent dye `finalize_probe.add_probe_seq`
+- if some genes do not have enough number (default is 4) of candidate seed sequences that meet criteria (specific sequences from 4 different `id_clust`), repeat the process one time only for those genes with different seed_seq_len parameters specified by `seed_seq_len_re` which can take multiple values as a list. The new result will be concatenated to the original dataframe, but `id_clust` is newly assigned accordingly.
+- manually check suggested probe sequences and determine which sequences you will use for the experiment. choose one seed sequence from one cluster to avoid large overlaps between probes. If there are still not enough sequences for certain genes, try to change the parameters, and run the program again.
 
 ## Input parameters
 
@@ -39,10 +41,13 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 - BridgeProbes: path to the txt file in which bridge sequences and anchor sequences are listed. These sequences are derived from the previous publication (HYBISS paper, Gyllborg, D. et al., 2020).
 - dye_seq: path to the txt file in which dye and detection oligos are listed. These sequences are derived from the previous publication (HYBISS paper, Gyllborg, D. et al., 2020).
 - seed_seq_len: integer, specify seed sequence length. 40-60 nt are usually used. the default value is 50.
+- seed_seq_len_re: list of integers, specify seed sequence length for reanalysis. the default values are [48, 52]
 - gcmin: integer, minimum GC content (%) used in `screenseq.search_seed_seq`. the default value is 40.
 - gcmax: integer, maximum GC content (%) used in `screenseq.search_seed_seq`. the default value is 60.
 - tmmin: integer, minimum melting temperature (C) used in `screenseq.search_seed_seq`. the default value is 48.
 - tmmax: integer, maximum melting temperature (C) used in `screenseq.search_seed_seq`. the default value is 52.
+- spec_coverage: 0 - 1, sequence overlap threshold to judge sequence specificity. the default value is 0.5 (50%)
+- spec_homology: 0 - 1, the threshold for the percentage of identical position to judge sequence specificity. the default value is 0.8 (80%)
 - outfile: path and name of the output txt file.
 - threads: the number of threads you will use. this parameter is currently not used.
 - high_throughput: integer, specify the number of bridge sequences used in high throughput mode. set 0 if you do not use high throughput mode. the default value is 0.
@@ -52,7 +57,7 @@ This is the tool to design probes for PHYTOMap. Currently testing whether probes
 
 - tab-delimited text file with the header in the first row.
 - target gene ID in the first column, detection round in the second column, and detection dye in the third column. Forth column onward will be ignored.
-- gene ID should be exactly the same as headers in the reference CDS fasta.
+- gene ID should be the same as headers in the reference CDS fasta.
 
 ### reference_cds.fasta
 
@@ -143,22 +148,25 @@ unique bridge seq is a bit modified compared to the one in PLP. one nucleotide a
 ### judging the specificity of the sequence
 
 - `checkblast.readblastout` will judge the specificity of the sequence
-- sequences will be judged as non-specific if there are any blast hits with more than 50% coverage and 80% homology.
+- sequences will be judged as non-specific if there are any blast hits with more than spec_coverage (the default is 50%) and spec_homology (the default is 80%).
 
 ### grouping seed sequences
 
-- `checkblast.add_id_clust` will group the seed sequence depending on the distance in the gene sequence.
-- this classification depends on `seed_seq_len`.
-- Roughly speaking, seed sequences within `seed_seq_len` x 2 bp will be grouped in the same cluster.
+- `checkblast.add_id_clust` will group the seed sequence depending on the distance within the gene sequence.
+- if the first member of the cluster starts at 50, this cluster can include the sequences starting at 51 to 100, meaning all the sequences belonging to this cluster span from 50 to 150.
 - two sequences in two successive `id_clust` may have a large overlap when good sequences span more than 100 bp. For example, when the last sequence in `id_cluster=1` (which ranges in 250-350) is in 300-350, the first sequence in `id_cluster=2` could be in 305-355.
 - choose sequences to avoid large overlaps between probes.
 
+### get experimental design
+
+- experimental design is extracted from the `round_table.txt` and `dye_seq.txt`.
+- rank bridge sequences by running blast against target genome using bridge sequences as queries. Sequences will be ranked according to the highest bit score. Sequences with lower bit scores will be used first.
+- the bridge probe will be designed depending on the detection dye.
+
 ### finalizing probes
 
-- rank bridge sequences by running blast against target genome using bridge sequences as queries. Sequences will be ranked according to the highest bit score. Sequences with lower bit scores will be used first.
 - the first half of the seed sequence will be used for padlock probes. barcode sequences, anchor sequences, and misc sequences will be added. 
 - the second half of the seed sequence will be used for primer sequences. one part of the padlock probes will be added.
-- the bridge probe will be designed depending on the detection dye.
 
 
 ## Note
